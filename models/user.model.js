@@ -18,16 +18,22 @@ const User = new mongoose.Schema({
     type: String,
     required: true
   },
-  verified: {
-    type: Boolean,
+  profile_picture: {
+    type: String,
+    required: false
+  },
+  cc: {
+    type: String,
     required: true,
-    default: false
+    unique: true
   },
-  OAuth: {
-    type: String
+  latitude: {
+    type: String,
+    required: false
   },
-  OAuth_expire: {
-    type: Date
+  longitude: {
+    type: String,
+    required: false
   },
 });
 
