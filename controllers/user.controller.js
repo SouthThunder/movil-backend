@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { sendVerification, sendResetPassword } from "./emails.controller.js";
+import { sendResetPassword } from "./emails.controller.js";
 import {
   hashPassword,
   verifyPassword,
@@ -19,8 +19,8 @@ export const createUser = async (req, res) => {
 
     req.body.password = await hashPassword(req.body.password);
     const user = await User.create(req.body);
-    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: "4h" })
-    sendVerification(req, res, token);
+    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY)
+    res.status(200).json({ token: token });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -128,6 +128,47 @@ export const updateOAuth = async (req, res) => {
     res.status(500).json({ error: error });
   }
 };
+
+export const watchUserAvailability = (ws, req) => {
+  try {
+    const { User } = getMongoModels();
+
+    console.log('Setting up change stream for user updates.');
+
+    // Initialize the change stream to watch for updates in specific fields
+    const changeStream = User.watch([
+      {
+        $match: {
+          $or: [
+            { operationType: 'insert' },
+            { operationType: 'update' }
+          ]
+
+        }
+      }
+    ], {
+      fullDocument: 'updateLookup'
+    });
+
+    ws.send('Change stream set up successfully.')
+
+
+
+    changeStream.on("change", data => {
+      console.log('Change detected:', data);
+      ws.send(JSON.stringify(data)); // Send change data to all connected WebSocket clients
+    });
+
+    ws.on('close', () => {
+      console.log('WebSocket closed. Stopping change stream.');
+      changeStream.close();
+    });
+
+  } catch (error) {
+    console.error('Failed to set up the change stream:', error);
+    ws.close();
+  }
+}
 
 export const updatePassword = async (req, res) => {
   try {

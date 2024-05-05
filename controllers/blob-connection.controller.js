@@ -70,7 +70,7 @@ export const getAllBlobsInConnectionById = async (req, res) => {
     try {
         // Implement the logic to get all blobs in a specific blob connection by ID
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_BLOB_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(extractJwtId(req));
+        const containerClient = blobServiceClient.getContainerClient('test');
         // Fill an array with all the blobs in the container
         // create an array of objects with the metadata and id of the blobs
         let blobs = [];
@@ -93,7 +93,7 @@ export const getBlobConnectionById = async (req, res) => {
     try {
         // Implement the logic to get a specific blob connection by ID
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_BLOB_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(extractJwtId(req));
+        const containerClient = blobServiceClient.getContainerClient('test');
         console.log(containerClient);
 
         res.status(200).json({ message: 'Successfully retrieved blob connection by ID' });
@@ -125,7 +125,7 @@ export const updateBlobConnectionById = async (req, res) => {
 export const getBlobById = async (req, res) => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_BLOB_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(extractJwtId(req)); // Make sure extractJwtId(req) correctly identifies your container
+        const containerClient = blobServiceClient.getContainerClient('test'); // Make sure extractJwtId(req) correctly identifies your container
         const blobClient = containerClient.getBlobClient(req.params.id);
 
         const downloadBlockBlobResponse = await blobClient.download();
@@ -147,7 +147,7 @@ export const addBlobToConnectionById = async (req, res) => {
     try {
         // Implement the logic to add a blob to a specific blob connection by ID
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_BLOB_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(extractJwtId(req));
+        const containerClient = blobServiceClient.getContainerClient('test');
         // Generate unique ID for the blob
         const id = uuidv4();
         const blockBlobClient = containerClient.getBlockBlobClient(id);
@@ -167,7 +167,7 @@ export const deleteBlobConnectionById = async (req, res) => {
     try {
         // Implement the logic to delete a specific blob connection by ID
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_BLOB_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(extractJwtId(req));
+        const containerClient = blobServiceClient.getContainerClient('test');
         await containerClient.delete();
         res.status(200).json({ message: 'Blob connection deleted successfully' });
     } catch (error) {

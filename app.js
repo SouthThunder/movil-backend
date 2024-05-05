@@ -5,11 +5,17 @@ import cors from "cors";
 //import routes
 import userRoutes from "./routes/user.route.js";
 
+import expressWs from "express-ws";
+
 // Import Azure Connection routes
 import blobConnection from "./routes/blob-connection.route.js";
 
 //create express app
 const app = express();
+
+//expressWs
+expressWs(app);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public', { maxAge: 7 * 24 * 60 * 60 * 1000 }));
 

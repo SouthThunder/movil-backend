@@ -35,6 +35,10 @@ const User = new mongoose.Schema({
     type: String,
     required: false
   },
+  available: {
+    type: Boolean,
+    default: true
+  }
 });
 
 export default User;
