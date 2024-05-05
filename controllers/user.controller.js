@@ -53,9 +53,7 @@ export const getUserByCreds = async (req, res) => {
     } else {
       const match = await verifyPassword(user.password, req.body.password);
       if (match) {
-        const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
-          expiresIn: "4h",
-        });
+        const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY);
         res.status(200).json({ token: token });
       } else {
         res.status(404).json({ error: "Incorrect password" });
@@ -161,6 +159,24 @@ export const watchUserAvailability = (ws, req) => {
     console.error('Failed to set up the change stream:', error);
     ws.close();
   }
+}
+
+export const changeUserAvailability = async (req, res) => {
+  try {
+    const { User } = getMongoModels();
+
+    const { available } = req.body;
+    const id = extractJwtId(req);
+    const user = await User.findByIdAndUpdate(id, { available: available });
+    if (user) {
+      res.status(200).json({ available: user.available });
+    }
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update Availability" });
+  }
+
 }
 
 export const getUsersOnAvailability = async (req, res) => {
