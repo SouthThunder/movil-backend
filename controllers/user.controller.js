@@ -8,6 +8,8 @@ import {
   verifyToken,
 } from "../utils/hashing.js";
 
+import { extractJwtId } from "../utils/common.js";
+
 import { getMongoModels } from "../database/mongoDB.js";
 
 dotenv.config();
@@ -48,7 +50,7 @@ export const getUserByCreds = async (req, res) => {
     });
     if (!user) {
       res.status(404).json({ error: "User not found" });
-    } else if (user.verified) {
+    } else {
       const match = await verifyPassword(user.password, req.body.password);
       if (match) {
         const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
@@ -58,8 +60,6 @@ export const getUserByCreds = async (req, res) => {
       } else {
         res.status(404).json({ error: "Incorrect password" });
       }
-    } else {
-      res.status(401).json({ error: "User not verified" });
     }
   } catch (error) {
     console.error(error);
@@ -133,30 +133,23 @@ export const watchUserAvailability = (ws, req) => {
   try {
     const { User } = getMongoModels();
 
-    console.log('Setting up change stream for user updates.');
-
     // Initialize the change stream to watch for updates in specific fields
     const changeStream = User.watch([
       {
         $match: {
           $or: [
             { operationType: 'insert' },
-            { operationType: 'update' }
+            { operationType: 'update' },
+            { operationType: 'delete' }
           ]
-
         }
       }
     ], {
-      fullDocument: 'updateLookup'
+      fullDocument: 'updateLookup',
     });
 
-    ws.send('Change stream set up successfully.')
-
-
-
     changeStream.on("change", data => {
-      console.log('Change detected:', data);
-      ws.send(JSON.stringify(data)); // Send change data to all connected WebSocket clients
+      ws.send(JSON.stringify(data));
     });
 
     ws.on('close', () => {
@@ -168,6 +161,26 @@ export const watchUserAvailability = (ws, req) => {
     console.error('Failed to set up the change stream:', error);
     ws.close();
   }
+}
+
+export const getUsersOnAvailability = async (req, res) => {
+  try {
+    const { User } = getMongoModels();
+
+    // get the id from the token
+    const id = extractJwtId(req);
+
+    // Get the users when Availability is true
+    const users = await User.find({ available: true }, '_id profile_picture name lastname');
+
+    // Exclude the user based on the id
+    const filteredUsers = users.filter(user => user._id.toString() !== id);
+
+    res.status(200).json({ users: filteredUsers });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve Users" });
+  }
+
 }
 
 export const updatePassword = async (req, res) => {
