@@ -11,6 +11,7 @@ import {
 import { extractJwtId } from "../utils/common.js";
 
 import { getMongoModels } from "../database/mongoDB.js";
+import e from "express";
 
 dotenv.config();
 
@@ -158,6 +159,26 @@ export const watchUserAvailability = (ws, req) => {
   } catch (error) {
     console.error('Failed to set up the change stream:', error);
     ws.close();
+  }
+}
+
+export const updateUserLocation = async (req, res) => {
+  try {
+    const { User } = getMongoModels();
+
+    const { latitude, longitude } = req.body;
+    const id = extractJwtId(req);
+    const user = await User.findByIdAndUpdate(id, { latitude: latitude, longitude: longitude });
+    if (user) {
+      res.status(200).json({ message: "Location updated successfully" });
+    } else {
+      res.status(404).json({ error: "User not found" });
+
+    }
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update Location" });
   }
 }
 
