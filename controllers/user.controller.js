@@ -153,6 +153,11 @@ export const watchUserAvailability = (ws, req) => {
 
     console.log('WebSocket connected. Starting change stream.');
 
+    // Send User data when the socket is connected
+    User.findById(userId).then(user => {
+      ws.send(JSON.stringify(user));
+    });
+
     changeStream.on("change", data => {
       const { fullDocument } = data;
       ws.send(JSON.stringify(fullDocument));
