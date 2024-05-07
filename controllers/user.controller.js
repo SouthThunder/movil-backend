@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import { sendResetPassword } from "./emails.controller.js";
 import {
@@ -11,7 +12,6 @@ import {
 import { extractJwtId } from "../utils/common.js";
 
 import { getMongoModels } from "../database/mongoDB.js";
-import e from "express";
 
 dotenv.config();
 
@@ -132,10 +132,14 @@ export const watchUserAvailability = (ws, req) => {
   try {
     const { User } = getMongoModels();
 
+    const { id } = req.params;
+    const userId = ObjectId.createFromHexString(id);
+
     // Initialize the change stream to watch for updates in specific fields
     const changeStream = User.watch([
       {
         $match: {
+          'fullDocument._id': userId,
           $or: [
             { operationType: 'insert' },
             { operationType: 'update' },
@@ -147,8 +151,11 @@ export const watchUserAvailability = (ws, req) => {
       fullDocument: 'updateLookup',
     });
 
+    console.log('WebSocket connected. Starting change stream.');
+
     changeStream.on("change", data => {
-      ws.send(JSON.stringify(data));
+      const { fullDocument } = data;
+      ws.send(JSON.stringify(fullDocument));
     });
 
     ws.on('close', () => {

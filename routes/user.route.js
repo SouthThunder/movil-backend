@@ -14,7 +14,7 @@ router.get('/user/verify/:token', verifyUser);
 router.get('/user/availability', getUsersOnAvailability)
 
 // WebSocket
-router.ws('/user/ws', watchUserAvailability)
+router.ws('/user/ws/:id', watchUserAvailability)
 
 // Post
 router.post('/user/create', createUser);
