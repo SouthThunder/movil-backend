@@ -11,25 +11,25 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // get all blob connections
-router.get("/blob-connections", getAllBlobConnections);
+router.get("/blob", getAllBlobConnections);
 
 // create a new blob connection
-router.post("/blob-connections", authorize, createBlobConnection);
+router.post("/blob", authorize, createBlobConnection);
 
 // update a specific blob connection by ID
-router.put("/blob-connections/:id", authorize, updateBlobConnectionById);
+router.put("/blob/:id", authorize, updateBlobConnectionById);
 
 // Upload a Blob to a specific blob connection by ID
-router.post("/blob-connections/upload", authorize, upload.single('file'), addBlobToConnectionById);
+router.post("/blob/upload", authorize, upload.single('file'), addBlobToConnectionById);
 
 // Get list of blobs in a specific blob connection by ID
-router.get("/blob-connections/list", authorize, getAllBlobsInConnectionById);
+router.get("/blob/list", authorize, getAllBlobsInConnectionById);
 
 // get a specific blob connection by ID
-router.get("/blob-connections/transfer/:id", authorize, getBlobById);
+router.post("/blob/transfer", authorize, getBlobById);
 
 // delete a specific blob connection by ID
-router.delete("/blob-connections/:id", authorize, deleteBlobConnectionById);
+router.delete("/blob/:id", authorize, deleteBlobConnectionById);
 
 
 export default router;

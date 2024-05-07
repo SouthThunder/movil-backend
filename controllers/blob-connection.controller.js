@@ -1,4 +1,5 @@
 // Import necessary modules and dependencies
+import { getMongoModels } from "../database/mongoDB.js";
 import { BlobServiceClient } from "@azure/storage-blob";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from 'uuid';
@@ -126,7 +127,7 @@ export const getBlobById = async (req, res) => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_BLOB_CONNECTION_STRING);
         const containerClient = blobServiceClient.getContainerClient('test'); // Make sure extractJwtId(req) correctly identifies your container
-        const blobClient = containerClient.getBlobClient(req.params.id);
+        const blobClient = containerClient.getBlobClient(req.body.id);
 
         const downloadBlockBlobResponse = await blobClient.download();
         const downloaded = await streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
@@ -155,7 +156,16 @@ export const addBlobToConnectionById = async (req, res) => {
         // Add name to the blob metadata
         await blockBlobClient.upload(data, data.length);
         await blockBlobClient.setMetadata({ name: req.file.originalname });
-        res.status(200).json({ id: id, name: req.file.originalname });
+
+        const { User } = getMongoModels()
+
+        // Update the user's profile with the blob ID
+        const user = await User.findByIdAndUpdate(extractJwtId(req), { profile_picture: id });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json({ message: 'Profile picture uploaded successfully' });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal server error' });
