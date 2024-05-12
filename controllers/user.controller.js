@@ -143,7 +143,9 @@ export const watchUserAvailabilityById = (ws, req) => {
           $or: [
             { operationType: 'insert' },
             { operationType: 'update' },
-            { operationType: 'delete' }
+            { operationType: 'delete' },
+            { 'updateDescription.updatedFields.longitude': { $exists: true } },
+            { 'updateDescription.updatedFields.latitude': { $exists: true } }
           ]
         }
       }
@@ -185,9 +187,9 @@ export const watchUserAvailability = (ws, req) => {
         $match: {
           'fullDocument.available': true,
           $or: [
-            { operationType: 'insert' },
-            { operationType: 'update' },
-            { operationType: 'delete' }
+            { operationType: 'update', 'updateDescription.updatedFields.available': true },
+            { operationType: 'insert', 'fullDocument.available': true },
+            { operationType: 'delete' },
           ]
         }
       }
@@ -198,6 +200,7 @@ export const watchUserAvailability = (ws, req) => {
 
     changeStream.on("change", data => {
       const { fullDocument } = data;
+      console.log(fullDocument);
       ws.send(JSON.stringify(fullDocument));
     });
 
@@ -242,6 +245,7 @@ export const changeUserAvailability = async (req, res) => {
     const id = extractJwtId(req);
     const user = await User.findByIdAndUpdate(id, { available: available });
     if (user) {
+      console.log(user)
       res.status(200).json({ available: user.available });
     }
   }
