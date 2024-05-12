@@ -128,7 +128,7 @@ export const updateOAuth = async (req, res) => {
   }
 };
 
-export const watchUserAvailability = (ws, req) => {
+export const watchUserAvailabilityById = (ws, req) => {
   try {
     const { User } = getMongoModels();
 
@@ -143,7 +143,9 @@ export const watchUserAvailability = (ws, req) => {
           $or: [
             { operationType: 'insert' },
             { operationType: 'update' },
-            { operationType: 'delete' }
+            { operationType: 'delete' },
+            { 'updateDescription.updatedFields.longitude': { $exists: true } },
+            { 'updateDescription.updatedFields.latitude': { $exists: true } }
           ]
         }
       }
@@ -152,6 +154,11 @@ export const watchUserAvailability = (ws, req) => {
     });
 
     console.log('WebSocket connected. Starting change stream.');
+
+    // Send User data when the socket is connected
+    User.findById(userId).then(user => {
+      ws.send(JSON.stringify(user));
+    });
 
     changeStream.on("change", data => {
       const { fullDocument } = data;
@@ -168,6 +175,47 @@ export const watchUserAvailability = (ws, req) => {
     ws.close();
   }
 }
+
+
+export const watchUserAvailability = (ws, req) => {
+  try {
+    const { User } = getMongoModels();
+
+    // Initialize the change stream to watch for updates in specific fields
+    const changeStream = User.watch([
+      {
+        $match: {
+          'fullDocument.available': true,
+          $or: [
+            { operationType: 'update', 'updateDescription.updatedFields.available': true },
+            { operationType: 'insert', 'fullDocument.available': true },
+            { operationType: 'delete' },
+          ]
+        }
+      }
+    ], {
+      fullDocument: 'updateLookup',
+    });
+    console.log('WebSocket connected. Starting change stream.');
+
+    changeStream.on("change", data => {
+      const { fullDocument } = data;
+      console.log(fullDocument);
+      ws.send(JSON.stringify(fullDocument));
+    });
+
+    ws.on('close', () => {
+      console.log('WebSocket closed. Stopping change stream.');
+      changeStream.close();
+    });
+
+  } catch (error) {
+    console.error('Failed to set up the change stream:', error);
+    ws.close();
+  }
+}
+
+
 
 export const updateUserLocation = async (req, res) => {
   try {
@@ -197,6 +245,7 @@ export const changeUserAvailability = async (req, res) => {
     const id = extractJwtId(req);
     const user = await User.findByIdAndUpdate(id, { available: available });
     if (user) {
+      console.log(user)
       res.status(200).json({ available: user.available });
     }
   }
