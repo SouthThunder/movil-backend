@@ -128,7 +128,7 @@ export const updateOAuth = async (req, res) => {
   }
 };
 
-export const watchUserAvailability = (ws, req) => {
+export const watchUserAvailabilityById = (ws, req) => {
   try {
     const { User } = getMongoModels();
 
@@ -173,6 +173,46 @@ export const watchUserAvailability = (ws, req) => {
     ws.close();
   }
 }
+
+
+export const watchUserAvailability = (ws, req) => {
+  try {
+    const { User } = getMongoModels();
+
+    // Initialize the change stream to watch for updates in specific fields
+    const changeStream = User.watch([
+      {
+        $match: {
+          'fullDocument.available': true,
+          $or: [
+            { operationType: 'insert' },
+            { operationType: 'update' },
+            { operationType: 'delete' }
+          ]
+        }
+      }
+    ], {
+      fullDocument: 'updateLookup',
+    });
+    console.log('WebSocket connected. Starting change stream.');
+
+    changeStream.on("change", data => {
+      const { fullDocument } = data;
+      ws.send(JSON.stringify(fullDocument));
+    });
+
+    ws.on('close', () => {
+      console.log('WebSocket closed. Stopping change stream.');
+      changeStream.close();
+    });
+
+  } catch (error) {
+    console.error('Failed to set up the change stream:', error);
+    ws.close();
+  }
+}
+
+
 
 export const updateUserLocation = async (req, res) => {
   try {
