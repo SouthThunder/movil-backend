@@ -18,14 +18,35 @@ const User = new mongoose.Schema({
     type: String,
     required: true
   },
-  profile_picture: {
+  phone: {
     type: String,
+    required: true
+  },
+  birthdate: {
+    type: Date,
+    required: true
+  },
+  gender: {
+    type: String,
+    enum: ['M', 'F', 'O'],
+    required: true
+  },
+  preferences: {
+    type: Array,
+    required: true
+  },
+  prefered_distance: {
+    type: Number,
+    required: true
+  },
+  hobbies: {
+    type: Array,
     required: false
   },
-  cc: {
-    type: String,
-    required: true,
-    unique: true
+  profile_picture: {
+    type: Array,
+    required: false
+    // Max 6 pictures
   },
   latitude: {
     type: String,
@@ -35,10 +56,7 @@ const User = new mongoose.Schema({
     type: String,
     required: false
   },
-  available: {
-    type: Boolean,
-    default: false
-  }
+
 });
 
 export default User;
