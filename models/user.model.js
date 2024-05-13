@@ -5,10 +5,6 @@ const User = new mongoose.Schema({
     type: String,
     required: true
   },
-  lastname: {
-    type: String,
-    required: true
-  },
   email: {
     type: String,
     required: true,
@@ -28,11 +24,12 @@ const User = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ['M', 'F', 'O'],
+    enum: ['Hombre', 'Mujer', 'Otro'],
     required: true
   },
   preferences: {
-    type: Array,
+    type: String,
+    enum: ['Hombres', 'Mujeres', 'Otro'],
     required: true
   },
   prefered_distance: {

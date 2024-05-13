@@ -159,8 +159,9 @@ export const addBlobToConnectionById = async (req, res) => {
 
         const { User } = getMongoModels()
 
-        // Update the user's profile with the blob ID
-        const user = await User.findByIdAndUpdate(extractJwtId(req), { profile_picture: id });
+        // Add the blob ID to the user profile picture array
+        const user = await User.findByIdAndUpdate(extractJwtId(req), { $push: { profile_picture: id } });
+
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }

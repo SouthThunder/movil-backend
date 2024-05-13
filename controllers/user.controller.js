@@ -25,6 +25,7 @@ export const createUser = async (req, res) => {
     const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY)
     res.status(200).json({ token: token });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
