@@ -24,7 +24,7 @@ const User = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ['Hombre', 'Mujer', 'Otro'],
+    enum: ['Hombres', 'Mujeres', 'Otro'],
     required: true
   },
   preferences: {
@@ -45,15 +45,20 @@ const User = new mongoose.Schema({
     required: false
     // Max 6 pictures
   },
-  latitude: {
-    type: String,
-    required: false
-  },
-  longitude: {
-    type: String,
-    required: false
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
   },
 
 });
+
+User.index({ location: "2dsphere" });
 
 export default User;

@@ -67,6 +67,32 @@ export const getUserByCreds = async (req, res) => {
   }
 };
 
+export const getUsersOnProximity = async (req, res) => {
+  try {
+
+    const { User } = getMongoModels()
+    const id = extractJwtId(req)
+
+    const user = await User.findById(id)
+    const users = await User.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [user.location.coordinates[0], user.location.coordinates[1]]
+          },
+          $maxDistance: user.prefered_distance * 1000
+        }
+      },
+      gender: user.preferences
+    })
+
+    res.status(200).json({ users: users });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve Users" });
+  }
+}
+
 // authentica token
 export const auth = async (req, res) => {
   try {
