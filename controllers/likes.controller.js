@@ -39,7 +39,7 @@ export const createLike = async (req, res) => {
 
 const checkForMatch = async (user1, user2) => {
     try {
-        const { Like, Match } = getMongoModels();
+        const { Like, Match, Chat } = getMongoModels();
 
         // Check if user1 likes user2
         const user1LikesUser2 = await Like.findOne({
@@ -57,11 +57,16 @@ const checkForMatch = async (user1, user2) => {
 
         // If both likes are found, create a match
         if (user1LikesUser2 && user2LikesUser1) {
-            const match = new Match({
-                users: [user1, user2]
+            const match = await Match.create({
+                user1,
+                user2
             });
 
-            await match.save();
+            // Create a chat for the match
+            await Chat.create({
+                participants: [user1, user2],
+            });
+
             console.log('Match created:', match);
             return match;
         } else {
