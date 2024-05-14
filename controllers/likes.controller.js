@@ -1,0 +1,79 @@
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+import { extractJwtId } from "../utils/common.js";
+
+import { getMongoModels } from "../database/mongoDB.js";
+
+
+export const createLike = async (req, res) => {
+    try {
+        const { Like } = getMongoModels();
+
+        const { user2, like } = req.body;
+        const user1 = extractJwtId(req);
+
+
+        // Save the new like
+        await Like.create({
+            user1,
+            user2,
+            like
+        });
+
+        // After saving the like, check for a match
+        if (like) {
+            const match = await checkForMatch(user1, user2);
+            if (match) {
+                res.status(201).json({ message: 'Match created!', match });
+            } else {
+                res.status(200).json({ message: 'Like registered, no match found.' });
+            }
+        } else {
+            res.status(200).json({ message: 'Like registered.' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to register like', error });
+    }
+}
+
+const checkForMatch = async (user1, user2) => {
+    try {
+        const { Like, Match } = getMongoModels();
+
+        // Check if user1 likes user2
+        const user1LikesUser2 = await Like.findOne({
+            user1: user1,
+            user2: user2,
+            like: true
+        });
+
+        // Check if user2 likes user1
+        const user2LikesUser1 = await Like.findOne({
+            user1: user2,
+            user2: user1,
+            like: true
+        });
+
+        // If both likes are found, create a match
+        if (user1LikesUser2 && user2LikesUser1) {
+            const match = new Match({
+                users: [user1, user2]
+            });
+
+            await match.save();
+            console.log('Match created:', match);
+            return match;
+        } else {
+            console.log('No match found.');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error checking for matches:', error);
+        throw error;
+    }
+
+
+
+
+}

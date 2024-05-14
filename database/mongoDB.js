@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 
 // Import Schemas
 import User from '../models/user.model.js';
+import Match from '../models/match.model.js';
+import Like from '../models/likes.model.js';
 
 dotenv.config()
 
@@ -22,6 +24,8 @@ export const connectionMongo = () => {
 
 const models = {
     User: connectionMongo().model('User', User),
+    Match: connectionMongo().model('Match', Match),
+    Like: connectionMongo().model('Like', Like)
 }
 
 export const getMongoModels = () => models;
