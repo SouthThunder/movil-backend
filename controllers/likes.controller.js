@@ -1,6 +1,3 @@
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-
 import { extractJwtId } from "../utils/common.js";
 
 import { getMongoModels } from "../database/mongoDB.js";
