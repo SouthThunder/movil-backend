@@ -87,8 +87,9 @@ export const getUsersOnProximity = async (req, res) => {
       gender: user.preferences
     })
 
-    res.status(200).json({ users: users });
+    res.status(200).json({ users });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: "Failed to retrieve Users" });
   }
 }
@@ -242,20 +243,27 @@ export const watchUserAvailability = (ws, req) => {
   }
 }
 
-
-
 export const updateUserLocation = async (req, res) => {
   try {
     const { User } = getMongoModels();
 
-    const { latitude, longitude } = req.body;
     const id = extractJwtId(req);
-    const user = await User.findByIdAndUpdate(id, { latitude: latitude, longitude: longitude });
+
+    // Check if coordinates are in the correct order, adjust if necessary
+    let coordinates = req.body.location.coordinates;
+    if (coordinates && coordinates.length === 2) {
+      // Assuming coordinates are in [latitude, longitude] and need to be swapped
+      coordinates = [coordinates[1], coordinates[0]];
+    }
+
+    // Update the coordinates in the request body
+    req.body.location.coordinates = coordinates;
+
+    const user = await User.findByIdAndUpdate(id, req.body);
     if (user) {
       res.status(200).json({ message: "Location updated successfully" });
     } else {
       res.status(404).json({ error: "User not found" });
-
     }
   }
   catch (error) {

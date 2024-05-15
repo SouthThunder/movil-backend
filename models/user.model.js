@@ -24,12 +24,12 @@ const User = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ['Hombres', 'Mujeres', 'Otro'],
+    enum: ['H', 'M', 'O'],
     required: true
   },
   preferences: {
     type: String,
-    enum: ['Hombres', 'Mujeres', 'Otro'],
+    enum: ['H', 'M', 'O'],
     required: true
   },
   prefered_distance: {
@@ -49,11 +49,11 @@ const User = new mongoose.Schema({
     type: {
       type: String,
       enum: ['Point'],
-      required: true
+      required: false
     },
     coordinates: {
       type: [Number],
-      required: true
+      required: false
     }
   },
 

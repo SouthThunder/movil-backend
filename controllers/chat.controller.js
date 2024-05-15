@@ -37,6 +37,7 @@ export const getChatsByUser = async (req, res) => {
     }
 }
 
+
 export const getAllMessagesInChat = async (req, res) => {
     try {
         const { Message } = getMongoModels();
@@ -50,7 +51,6 @@ export const getAllMessagesInChat = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Failed to get messages', error });
     }
-
 }
 
 
