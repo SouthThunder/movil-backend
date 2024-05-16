@@ -23,15 +23,30 @@ export const createChat = async (req, res) => {
 
 export const getChatsByUser = async (req, res) => {
     try {
-        const { Chat } = getMongoModels();
+        const { Chat, User } = getMongoModels();
 
         const user1 = extractJwtId(req);
 
         const chats = await Chat.find({
-            $or: [{ user1 }, { user2: user1 }]
+            participants: {
+                $in: [user1]
+            }
         });
 
-        res.status(200).json(chats);
+        // extract the other user in the chat
+        let usersIds = chats.map(chat => {
+            return chat.participants.filter(participant => participant.toString() !== user1);
+        });
+
+        // Get the users 
+        const users = await User.find({
+            _id: {
+                $in: usersIds
+            }
+        });
+        console.log(users)
+
+        res.status(200).json({ users });
     } catch (error) {
         res.status(500).json({ message: 'Failed to get chats', error });
     }

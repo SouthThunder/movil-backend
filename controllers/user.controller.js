@@ -70,7 +70,7 @@ export const getUserByCreds = async (req, res) => {
 export const getUsersOnProximity = async (req, res) => {
   try {
 
-    const { User } = getMongoModels()
+    const { User, Like } = getMongoModels()
     const id = extractJwtId(req)
 
     const user = await User.findById(id)
@@ -87,7 +87,11 @@ export const getUsersOnProximity = async (req, res) => {
       gender: user.preferences
     })
 
-    res.status(200).json({ users });
+    // Check if the user has not liked the other user
+    const likedUsers = await Like.find({ user1: id, like: true }, 'user2')
+    const filteredUsers = users.filter(user => !likedUsers.some(like => like.user2.toString() === user._id.toString()))
+
+    res.status(200).json({ users: filteredUsers });
   } catch (error) {
     console.log(error)
     res.status(500).json({ error: "Failed to retrieve Users" });
@@ -101,8 +105,8 @@ export const auth = async (req, res) => {
 
     const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    const user = await User.findById(decoded.id, '_id email name lastname');
-    res.status(200).json(user);
+    const user = await User.findById(decoded.id, '_id name birthdate gender hobbies profile_picture');
+    res.status(200).json({ User: user });
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve User" });
   }

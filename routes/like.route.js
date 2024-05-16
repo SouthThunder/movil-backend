@@ -8,3 +8,6 @@ const router = express.Router();
 
 // Post Methods
 router.post("/like", authorize, createLike);
+
+
+export default router;

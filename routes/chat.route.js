@@ -7,3 +7,6 @@ const router = express.Router();
 
 // get all chats by user
 router.get("/chat", authorize, getChatsByUser);
+
+
+export default router

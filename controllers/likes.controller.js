@@ -5,10 +5,26 @@ import { getMongoModels } from "../database/mongoDB.js";
 
 export const createLike = async (req, res) => {
     try {
+
+        console.log('Creating like:', req.body)
         const { Like } = getMongoModels();
 
         const { user2, like } = req.body;
         const user1 = extractJwtId(req);
+
+        // Check if like already exists
+        const existingLike = await Like.findOne({
+            user1,
+            user2
+        });
+
+        // If like already exists, update it
+        if (existingLike) {
+            existingLike.like = like;
+            await existingLike.save();
+            res.status(200).json({ message: 'Like updated.' });
+            return;
+        }
 
 
         // Save the new like
@@ -22,7 +38,7 @@ export const createLike = async (req, res) => {
         if (like) {
             const match = await checkForMatch(user1, user2);
             if (match) {
-                res.status(201).json({ message: 'Match created!', match });
+                res.status(201).json({ message: 'Match created!', match: match });
             } else {
                 res.status(200).json({ message: 'Like registered, no match found.' });
             }
@@ -30,6 +46,7 @@ export const createLike = async (req, res) => {
             res.status(200).json({ message: 'Like registered.' });
         }
     } catch (error) {
+        console.log('Error registering like:', error);
         res.status(500).json({ message: 'Failed to register like', error });
     }
 }
