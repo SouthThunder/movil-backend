@@ -105,8 +105,9 @@ export const auth = async (req, res) => {
 
     const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    const user = await User.findById(decoded.id, '_id name birthdate gender hobbies profile_picture');
-    res.status(200).json({ User: user });
+    const user = await User.findById(decoded.id, 'name birthdate gender profile_picture _id');
+    console.log(user)
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve User" });
   }
@@ -189,12 +190,12 @@ export const watchUserAvailabilityById = (ws, req) => {
 
     // Send User data when the socket is connected
     User.findById(userId).then(user => {
-      ws.send(JSON.stringify(user));
+      ws.send(JSON.stringify(user.location));
     });
 
     changeStream.on("change", data => {
       const { fullDocument } = data;
-      ws.send(JSON.stringify(fullDocument));
+      ws.send(JSON.stringify(fullDocument.location));
     });
 
     ws.on('close', () => {
