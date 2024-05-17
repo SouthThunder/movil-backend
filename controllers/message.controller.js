@@ -7,16 +7,21 @@ export const createMessage = async (req, res) => {
     try {
         const { Message } = getMongoModels();
 
-        const { content } = req.body;
+        console.log('Creating message')
+
+        const { content, chat } = req.body;
         const user1 = extractJwtId(req);
 
         // Save the new message
-        const message = await Message.create({
+        const messages = await Message.create({
             sender: user1,
-            content
+            content,
+            chat
         })
 
-        res.status(201).json({ description: 'Message sent!', message });
+        console.log('Message created')
+
+        res.status(201).json({ message: 'Message sent!', messages });
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Failed to Send message', error });

@@ -6,6 +6,7 @@ import cors from "cors";
 import userRoutes from "./routes/user.route.js";
 import likeRoutes from "./routes/like.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import messageRoute from "./routes/message.route.js";
 
 // Import Azure Connection routes
 import blobConnection from "./routes/blob-connection.route.js";
@@ -34,6 +35,7 @@ app.use(
 app.use("/api", userRoutes);
 app.use("/api", likeRoutes);
 app.use("/api", chatRoutes);
+app.use("/api", messageRoute);
 app.use("/api", blobConnection);
 app.use("*", (req, res) => {
   res.status(404).json({ message: "error 404" });

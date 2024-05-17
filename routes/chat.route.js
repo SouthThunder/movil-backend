@@ -1,5 +1,5 @@
 import express from "express";
-import { getChatsByUser, webSocketChat } from "../controllers/chat.controller.js";
+import { getChatsByUser, webSocketChat, createChat } from "../controllers/chat.controller.js";
 import { authorize } from "../controllers/authMiddleware.js";
 
 // Import socket
@@ -14,8 +14,11 @@ expressWs(router)
 // get all chats by user
 router.get("/chat", authorize, getChatsByUser);
 
+// Post a new chat
+router.post("/chat", authorize, createChat);
+
 // Chat web socket
-router.ws("/chat/ws", authorize, webSocketChat)
+router.ws("/chat/ws/:id", webSocketChat)
 
 
 export default router

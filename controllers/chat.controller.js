@@ -24,33 +24,57 @@ export const createChat = async (req, res) => {
 export const getChatsByUser = async (req, res) => {
     try {
         const { Chat, User } = getMongoModels();
-
         const user1 = extractJwtId(req);
 
+        // Obtener los chats donde participa el usuario
         const chats = await Chat.find({
             participants: {
                 $in: [user1]
             }
         });
 
-        // extract the other user in the chat
-        let usersIds = chats.map(chat => {
-            return chat.participants.filter(participant => participant.toString() !== user1);
+        // Extraer los IDs de los otros participantes
+        let usersIds = chats.flatMap(chat => {
+            return chat.participants.filter(participant => {
+                return participant.toString() !== user1;
+            });
         });
 
-        // Get the users 
+        // Obtener la información de los otros usuarios
         const users = await User.find({
             _id: {
                 $in: usersIds
             }
         });
-        console.log(users)
 
-        res.status(200).json({ users });
+        // Construir el objeto de respuesta
+        let response = chats.map(chat => {
+            // Obtener los otros participantes de cada chat
+            let otherUsers = chat.participants.filter(participant => participant.toString() !== user1);
+
+            // Encontrar los detalles del usuario
+            let userDetails = otherUsers.map(userId => {
+                let user = users.find(u => u._id.toString() === userId.toString());
+                return {
+                    chatId: chat._id,
+                    user: user
+                };
+            });
+
+            return userDetails;
+        });
+
+        // Aplanar el array de respuesta
+        response = response.flat();
+
+        console.log(response)
+
+        res.status(200).json({ users: response });
     } catch (error) {
         res.status(500).json({ message: 'Failed to get chats', error });
     }
-}
+};
+
 
 
 export const getAllMessagesInChat = async (req, res) => {
@@ -69,36 +93,45 @@ export const getAllMessagesInChat = async (req, res) => {
 }
 
 
+
+
 export const webSocketChat = async (ws, req) => {
-    const { Chat, Message } = getMongoModels();
+    try {
+        const { Chat, Message } = getMongoModels();
 
-    const user1 = extractJwtId(req);
-    const { user2 } = req.body;
+        console.log('Chat WS connection established');
 
-    // Find the chat
-    const chat = await Chat.findOne({
-        $or: [
-            { user1, user2 },
-            { user1: user2, user2: user1 }
-        ]
-    });
+        const user1 = extractJwtId(req);
+        console.log(user1)
+        const { id } = req.params;
 
-    // WS Connection for messages
-    const messageStream = Message.watch([
-        {
-            $match: {
-                $and: [
-                    { 'fullDocument.chat': chat._id },
-                    { 'operationType': 'insert' }
-                ]
+        // Find the chat
+        const chat = await Chat.findOne({
+            $or: [
+                { user1, id },
+                { user1: id, user2: user1 }
+            ]
+        });
+
+        // WS Connection for messages
+        const messageStream = Message.watch([
+            {
+                $match: {
+                    $and: [
+                        { 'fullDocument.chat': chat._id },
+                        { 'operationType': 'insert' }
+                    ]
+                }
             }
-        }
-    ])
+        ])
 
-    // Send messages to the client
-    messageStream.on('change', data => {
-        ws.send(JSON.stringify(data.fullDocument));
-    });
+        // Send messages to the client
+        messageStream.on('change', data => {
+            ws.send(JSON.stringify(data.fullDocument));
+        });
+    } catch (error) {
+        console.error(error)
+    }
 }
 
 
