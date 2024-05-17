@@ -5,10 +5,6 @@ const User = new mongoose.Schema({
     type: String,
     required: true
   },
-  lastname: {
-    type: String,
-    required: true
-  },
   email: {
     type: String,
     required: true,
@@ -18,27 +14,51 @@ const User = new mongoose.Schema({
     type: String,
     required: true
   },
+  phone: {
+    type: String,
+    required: true
+  },
+  birthdate: {
+    type: Date,
+    required: true
+  },
+  gender: {
+    type: String,
+    enum: ['H', 'M', 'O'],
+    required: true
+  },
+  preferences: {
+    type: String,
+    enum: ['H', 'M', 'O'],
+    required: true
+  },
+  prefered_distance: {
+    type: Number,
+    required: true
+  },
+  hobbies: {
+    type: Array,
+    required: false
+  },
   profile_picture: {
-    type: String,
+    type: Array,
     required: false
+    // Max 6 pictures
   },
-  cc: {
-    type: String,
-    required: true,
-    unique: true
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: false
+    },
+    coordinates: {
+      type: [Number],
+      required: false
+    }
   },
-  latitude: {
-    type: String,
-    required: false
-  },
-  longitude: {
-    type: String,
-    required: false
-  },
-  available: {
-    type: Boolean,
-    default: false
-  }
+
 });
+
+User.index({ location: "2dsphere" });
 
 export default User;

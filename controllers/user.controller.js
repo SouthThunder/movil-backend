@@ -25,6 +25,7 @@ export const createUser = async (req, res) => {
     const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY)
     res.status(200).json({ token: token });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -66,6 +67,37 @@ export const getUserByCreds = async (req, res) => {
   }
 };
 
+export const getUsersOnProximity = async (req, res) => {
+  try {
+
+    const { User, Like } = getMongoModels()
+    const id = extractJwtId(req)
+
+    const user = await User.findById(id)
+    const users = await User.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [user.location.coordinates[0], user.location.coordinates[1]]
+          },
+          $maxDistance: user.prefered_distance * 1000
+        }
+      },
+      gender: user.preferences
+    })
+
+    // Check if the user has not liked the other user
+    const likedUsers = await Like.find({ user1: id, like: true }, 'user2')
+    const filteredUsers = users.filter(user => !likedUsers.some(like => like.user2.toString() === user._id.toString()))
+
+    res.status(200).json({ users: filteredUsers });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: "Failed to retrieve Users" });
+  }
+}
+
 // authentica token
 export const auth = async (req, res) => {
   try {
@@ -73,7 +105,8 @@ export const auth = async (req, res) => {
 
     const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    const user = await User.findById(decoded.id, '_id email name lastname');
+    const user = await User.findById(decoded.id, 'name birthdate gender profile_picture _id');
+    console.log(user)
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve User" });
@@ -157,12 +190,12 @@ export const watchUserAvailabilityById = (ws, req) => {
 
     // Send User data when the socket is connected
     User.findById(userId).then(user => {
-      ws.send(JSON.stringify(user));
+      ws.send(JSON.stringify(user.location));
     });
 
     changeStream.on("change", data => {
       const { fullDocument } = data;
-      ws.send(JSON.stringify(fullDocument));
+      ws.send(JSON.stringify(fullDocument.location));
     });
 
     ws.on('close', () => {
@@ -215,20 +248,27 @@ export const watchUserAvailability = (ws, req) => {
   }
 }
 
-
-
 export const updateUserLocation = async (req, res) => {
   try {
     const { User } = getMongoModels();
 
-    const { latitude, longitude } = req.body;
     const id = extractJwtId(req);
-    const user = await User.findByIdAndUpdate(id, { latitude: latitude, longitude: longitude });
+
+    // Check if coordinates are in the correct order, adjust if necessary
+    let coordinates = req.body.location.coordinates;
+    if (coordinates && coordinates.length === 2) {
+      // Assuming coordinates are in [latitude, longitude] and need to be swapped
+      coordinates = [coordinates[1], coordinates[0]];
+    }
+
+    // Update the coordinates in the request body
+    req.body.location.coordinates = coordinates;
+
+    const user = await User.findByIdAndUpdate(id, req.body);
     if (user) {
       res.status(200).json({ message: "Location updated successfully" });
     } else {
       res.status(404).json({ error: "User not found" });
-
     }
   }
   catch (error) {

@@ -1,5 +1,5 @@
 import express from "express";
-import { getUsers, getUserByCreds, createUser, auth, verifyUser, updateOAuth, verifyOAuth, updatePassword, watchUserAvailabilityById, getUsersOnAvailability, changeUserAvailability, updateUserLocation, watchUserAvailability } from "../controllers/user.controller.js";
+import { getUsers, getUserByCreds, createUser, auth, verifyUser, updateOAuth, verifyOAuth, updatePassword, watchUserAvailabilityById, getUsersOnAvailability, changeUserAvailability, updateUserLocation, watchUserAvailability, getUsersOnProximity } from "../controllers/user.controller.js";
 import { authorize } from "../controllers/authMiddleware.js";
 import expressWs from "express-ws";
 
@@ -12,6 +12,7 @@ router.get('/user/all', getUsers);
 router.get('/user/auth', authorize, auth)
 router.get('/user/verify/:token', verifyUser);
 router.get('/user/availability', getUsersOnAvailability)
+router.get('/user/proximity', getUsersOnProximity)
 
 // WebSocket
 router.ws('/user/ws', watchUserAvailability)
