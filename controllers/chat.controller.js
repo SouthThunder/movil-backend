@@ -93,25 +93,16 @@ export const getAllMessagesInChat = async (req, res) => {
 }
 
 
-
-
 export const webSocketChat = async (ws, req) => {
     try {
         const { Chat, Message } = getMongoModels();
 
         console.log('Chat WS connection established');
 
-        const user1 = extractJwtId(req);
-        console.log(user1)
         const { id } = req.params;
 
         // Find the chat
-        const chat = await Chat.findOne({
-            $or: [
-                { user1, id },
-                { user1: id, user2: user1 }
-            ]
-        });
+        const chat = await Chat.findById(id);
 
         // WS Connection for messages
         const messageStream = Message.watch([
@@ -127,7 +118,9 @@ export const webSocketChat = async (ws, req) => {
 
         // Send messages to the client
         messageStream.on('change', data => {
-            ws.send(JSON.stringify(data.fullDocument));
+            const { fullDocument } = data;
+            console.log(fullDocument)
+            ws.send(JSON.stringify(fullDocument));
         });
     } catch (error) {
         console.error(error)

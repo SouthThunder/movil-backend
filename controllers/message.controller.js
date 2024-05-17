@@ -5,9 +5,7 @@ import { getMongoModels } from "../database/mongoDB.js";
 
 export const createMessage = async (req, res) => {
     try {
-        const { Message } = getMongoModels();
-
-        console.log('Creating message')
+        const { Message } = getMongoModels()
 
         const { content, chat } = req.body;
         const user1 = extractJwtId(req);
@@ -18,8 +16,6 @@ export const createMessage = async (req, res) => {
             content,
             chat
         })
-
-        console.log('Message created')
 
         res.status(201).json({ message: 'Message sent!', messages });
     } catch (error) {
