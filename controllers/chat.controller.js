@@ -116,11 +116,16 @@ export const webSocketChat = async (ws, req) => {
             }
         ])
 
+
+        // Send all messages in the chat ordered by date created
+        const messages = await Message.find({ chat: chat._id }).sort({ createdAt: 1 });
+        ws.send(JSON.stringify(messages));
+
         // Send messages to the client
-        messageStream.on('change', data => {
-            const { fullDocument } = data;
-            console.log(fullDocument)
-            ws.send(JSON.stringify(fullDocument));
+        messageStream.on('change', async data => {
+            // Send the whole list of messages 
+            const messages = await Message.find({ chat: chat._id }).sort({ createdAt: 1 });
+            ws.send(JSON.stringify(messages));
         });
     } catch (error) {
         console.error(error)
